@@ -499,6 +499,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close detail modal with button
     closeDetailBtn.addEventListener('click', () => archiveDetailModal.style.display = 'none');
 
+    // --- PWA Service Worker Registration ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then((reg) => console.log('Service worker registered.', reg))
+                .catch((err) => console.log('Service worker not registered.', err));
+        });
+    }
+
+
     // --- Initialization ---
     initDB();
     resetUI();
