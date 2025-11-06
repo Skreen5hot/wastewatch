@@ -1,0 +1,89 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WasteWatch</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="pipboy-watch">
+        <header>
+            <h1>[WasteWatch]</h1>
+            <nav>
+                <button class="nav-btn active" data-tab="home">Home</button>
+                <button class="nav-btn" data-tab="archive">Archive</button>
+                <!-- <button class="nav-btn" data-tab="trends">Trends</button> -->
+            </nav>
+        </header>
+
+        <main>
+            <!-- Home/Stopwatch Section -->
+            <section id="home" class="tab-content active">
+                <div id="display">
+                    <div id="time-display">00:00:00.00</div>
+                    <div id="cost-display">$0.00</div>
+                </div>
+                <div class="info-bar">
+                    <span id="meeting-name-display">No Meeting Configured</span>
+                </div>
+                <div class="controls">
+                    <button class="btn" id="startPauseBtn" disabled>Start</button>
+                    <button class="btn" id="endBtn" disabled>End</button>
+                    <button class="btn" id="configureBtn">Configure</button>
+                </div>
+            </section>
+
+            <!-- Archive Section -->
+            <section id="archive" class="tab-content">
+                <h2>[Meeting Archive]</h2>
+                <div id="archive-list">
+                    <!-- Meetings will be populated here by JS -->
+                </div>
+                <div class="controls">
+                    <button class="btn" id="clearArchiveBtn">Clear Archive</button>
+                </div>
+            </section>
+
+            <!-- Trends Section (Future) -->
+            <section id="trends" class="tab-content">
+                <h2>[Cost Trends]</h2>
+                <!-- Chart.js canvas will go here -->
+            </section>
+        </main>
+
+        <footer>
+            Vault-Tec Approved. Version 1.0.0
+        </footer>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <h2>[Configure Meeting]</h2>
+            <form id="configForm">
+                <div class="form-group">
+                    <label for="meetingName">Meeting Name</label>
+                    <input type="text" id="meetingName" required>
+                </div>
+                <div class="form-group">
+                    <label for="avgHourlyRate">Avg. Hourly Rate ($)</label>
+                    <input type="number" id="avgHourlyRate" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="attendees">Attendees (comma or newline separated)</label>
+                    <textarea id="attendees" rows="5" required></textarea>
+                </div>
+                <div class="modal-controls">
+                    <button type="submit" class="btn" id="saveAndStartBtn">Save & Start</button>
+                    <button type="button" class="btn" id="cancelBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

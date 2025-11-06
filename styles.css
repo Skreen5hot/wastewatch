@@ -1,0 +1,266 @@
+/* --- CSS for Pip-Boy Aesthetic --- */
+:root {
+    --pipboy-green: #00ff66;
+    --pipboy-black: #001a00;
+    --pipboy-font: 'VT323', monospace;
+    --glow-color: rgba(0, 255, 102, 0.4);
+    --glow-color-strong: rgba(0, 255, 102, 0.7);
+}
+
+/* Basic Reset and Body Styling */
+body {
+    background-color: var(--pipboy-black);
+    color: var(--pipboy-green);
+    font-family: var(--pipboy-font);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-size: 18px;
+}
+
+/* Main Container: The Pip-Boy Screen */
+.pipboy-watch {
+    width: 95%;
+    max-width: 500px;
+    border: 5px solid var(--pipboy-green);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 20px var(--glow-color);
+    background-color: rgba(0, 26, 0, 0.8);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* CRT Screen Scanlines Effect */
+.pipboy-watch::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    z-index: 2;
+    animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    50% { opacity: 0.95; }
+    100% { opacity: 1; }
+}
+
+/* Header and Navigation */
+header {
+    border-bottom: 2px solid var(--pipboy-green);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+h1, h2 {
+    text-align: center;
+    font-size: 2em;
+    margin: 0 0 15px 0;
+    text-shadow: 0 0 8px var(--glow-color);
+    text-transform: uppercase;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid var(--pipboy-green);
+    color: var(--pipboy-green);
+    padding: 5px 15px;
+    cursor: pointer;
+    font-family: var(--pipboy-font);
+    font-size: 1.1em;
+    text-transform: uppercase;
+}
+
+.nav-btn.active, .nav-btn:hover {
+    background: var(--pipboy-green);
+    color: var(--pipboy-black);
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
+
+/* Display Area */
+#display {
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: var(--pipboy-black);
+    border: 2px solid var(--pipboy-green);
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px var(--glow-color);
+}
+
+#time-display {
+    font-size: 3em;
+    text-shadow: 0 0 8px var(--glow-color-strong);
+}
+
+#cost-display {
+    font-size: 2em;
+    margin-top: 5px;
+    text-shadow: 0 0 8px var(--glow-color);
+}
+
+.info-bar {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 5px;
+    border: 1px dashed var(--pipboy-green);
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+
+.btn {
+    background-color: var(--pipboy-green);
+    color: var(--pipboy-black);
+    border: 2px solid var(--pipboy-green);
+    padding: 10px 15px;
+    font-size: 1.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-family: var(--pipboy-font);
+    transition: background-color 0.1s, box-shadow 0.1s;
+    box-shadow: 0 0 5px var(--glow-color);
+    flex-grow: 1;
+}
+
+.btn:hover:not(:disabled) {
+    background-color: var(--pipboy-black);
+    color: var(--pipboy-green);
+    box-shadow: 0 0 15px var(--glow-color-strong);
+}
+
+.btn:active:not(:disabled) {
+    box-shadow: inset 0 0 8px var(--glow-color);
+}
+
+.btn:disabled {
+    background-color: #003314;
+    color: #006629;
+    border-color: #006629;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 26, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--pipboy-black);
+    padding: 25px;
+    border: 3px solid var(--pipboy-green);
+    border-radius: 8px;
+    box-shadow: 0 0 25px var(--glow-color-strong);
+    width: 90%;
+    max-width: 450px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    text-shadow: 0 0 5px var(--glow-color);
+}
+
+.form-group input, .form-group textarea {
+    width: 100%;
+    background-color: #001a00;
+    border: 1px solid var(--pipboy-green);
+    color: var(--pipboy-green);
+    padding: 8px;
+    font-family: var(--pipboy-font);
+    font-size: 1.1em;
+    box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    box-shadow: 0 0 10px var(--glow-color);
+}
+
+.modal-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Archive View */
+#archive-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px dashed var(--pipboy-green);
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.archive-item {
+    border-bottom: 1px solid #004d1a;
+    padding: 8px 5px;
+}
+.archive-item:last-child {
+    border-bottom: none;
+}
+.archive-item-header {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.archive-item-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+/* Footer */
+footer {
+    border-top: 2px solid var(--pipboy-green);
+    padding-top: 10px;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 0.9em;
+}
