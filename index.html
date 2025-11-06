@@ -32,6 +32,7 @@
                 <div class="controls">
                     <button class="btn" id="startPauseBtn" disabled>Start</button>
                     <button class="btn" id="endBtn" disabled>End</button>
+                    <button class="btn" id="miniplayerBtn" disabled>Miniplayer</button>
                     <button class="btn" id="configureBtn">Configure</button>
                 </div>
             </section>
@@ -96,6 +97,17 @@
             <div class="modal-controls">
                 <button type="button" class="btn" id="closeDetailBtn">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Miniplayer Content (hidden by default, used for Picture-in-Picture) -->
+    <div id="miniplayer-content" style="display: none;">
+        <div id="mini-display">
+            <div id="mini-time-display">00:00:00.00</div>
+            <div id="mini-cost-display">$0.00</div>
+        </div>
+        <div class="mini-info-bar">
+            <span id="mini-meeting-name-display">No Meeting Configured</span>
         </div>
     </div>
 

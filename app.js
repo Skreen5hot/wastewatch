@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const meetingNameDisplay = document.getElementById('meeting-name-display');
     const startPauseBtn = document.getElementById('startPauseBtn');
     const endBtn = document.getElementById('endBtn');
+    const miniplayerBtn = document.getElementById('miniplayerBtn');
     const configureBtn = document.getElementById('configureBtn');
     const archiveList = document.getElementById('archive-list');
     const clearArchiveBtn = document.getElementById('clearArchiveBtn');
@@ -30,6 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Chart Elements
     const trendsCanvas = document.getElementById('trendsChart');
     let trendsChart = null;
+
+    // Miniplayer (Picture-in-Picture) Elements
+    const miniplayerContent = document.getElementById('miniplayer-content');
+    let pipWindow = null;
+    // We need to get references to the elements *inside* the PiP window later
+    let miniTimeDisplay, miniCostDisplay, miniMeetingNameDisplay;
+
+
+
+
 
     // --- App State ---
     let state = {
@@ -95,6 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         timeDisplay.textContent = formatTime(state.elapsedTime);
         costDisplay.textContent = formatCurrency(currentCost);
+
+        // Also update the miniplayer if it's open
+        if (pipWindow) {
+            miniTimeDisplay.textContent = formatTime(state.elapsedTime);
+            miniCostDisplay.textContent = formatCurrency(currentCost);
+            miniMeetingNameDisplay.textContent = state.currentMeeting.name;
+        }
     }
 
     function resetUI() {
@@ -104,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startPauseBtn.textContent = 'Start';
         startPauseBtn.disabled = true;
         endBtn.disabled = true;
+        miniplayerBtn.disabled = true;
     }
 
     function startTimer() {
@@ -150,6 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
         state.currentMeeting = null;
         state.elapsedTime = 0;
         resetUI();
+
+        // Close the miniplayer window if it's open
+        if (pipWindow) {
+            pipWindow.close();
+        }
     }
 
     // --- Archive Functions ---
@@ -357,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     endBtn.addEventListener('click', endMeeting);
     clearArchiveBtn.addEventListener('click', clearArchive);
+    miniplayerBtn.addEventListener('click', toggleMiniplayer);
 
     // Modal
     configureBtn.addEventListener('click', () => {
@@ -408,12 +433,58 @@ document.addEventListener('DOMContentLoaded', () => {
         meetingNameDisplay.textContent = state.currentMeeting.name;
         startPauseBtn.disabled = false;
         endBtn.disabled = false;
+        miniplayerBtn.disabled = false;
         timeDisplay.textContent = formatTime(0);
         costDisplay.textContent = formatCurrency(0);
 
         configModal.style.display = 'none';
         startTimer();
     });
+
+    // --- Miniplayer (Picture-in-Picture) Logic ---
+    async function toggleMiniplayer() {
+        if (!('documentPictureInPicture' in window)) {
+            alert('Your browser does not support the Picture-in-Picture API. Please use a modern browser like Chrome or Edge.');
+            return;
+        }
+
+        if (pipWindow) {
+            pipWindow.close();
+            return;
+        }
+
+        try {
+            pipWindow = await window.documentPictureInPicture.requestWindow({
+                width: 250,
+                height: 150,
+            });
+
+            // Copy styles to the new window
+            [...document.styleSheets].forEach((styleSheet) => {
+                const css = styleSheet.ownerNode.cloneNode(true);
+                pipWindow.document.head.appendChild(css);
+            });
+
+            // Move content and get references to the new elements
+            pipWindow.document.body.append(miniplayerContent);
+            // Make the content visible inside the PiP window
+            miniplayerContent.style.display = 'block';
+
+            miniTimeDisplay = pipWindow.document.getElementById('mini-time-display');
+            miniCostDisplay = pipWindow.document.getElementById('mini-cost-display');
+            miniMeetingNameDisplay = pipWindow.document.getElementById('mini-meeting-name-display');
+
+            // When the PiP window is closed by the user
+            pipWindow.addEventListener('pagehide', () => {
+                document.body.append(miniplayerContent); // Move content back
+                // Hide it again when it's back in the main document
+                miniplayerContent.style.display = 'none';
+                pipWindow = null;
+            });
+        } catch (error) {
+            console.error('Error opening miniplayer:', error);
+        }
+    }
 
     // Close modal if clicking outside of it
     window.addEventListener('click', (event) => {
