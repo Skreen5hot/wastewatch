@@ -15,7 +15,7 @@
             <nav>
                 <button class="nav-btn active" data-tab="home">Home</button>
                 <button class="nav-btn" data-tab="archive">Archive</button>
-                <!-- <button class="nav-btn" data-tab="trends">Trends</button> -->
+                <button class="nav-btn" data-tab="trends">Trends</button>
             </nav>
         </header>
 
@@ -50,7 +50,9 @@
             <!-- Trends Section (Future) -->
             <section id="trends" class="tab-content">
                 <h2>[Cost Trends]</h2>
-                <!-- Chart.js canvas will go here -->
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
             </section>
         </main>
 
@@ -84,6 +86,21 @@
         </div>
     </div>
 
+    <!-- Archive Detail Modal -->
+    <div id="archiveDetailModal" class="modal">
+        <div class="modal-content">
+            <h2>[Archived Meeting Details]</h2>
+            <div id="archiveDetailContent">
+                <!-- Details will be populated here by JS -->
+            </div>
+            <div class="modal-controls">
+                <button type="button" class="btn" id="closeDetailBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

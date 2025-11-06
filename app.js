@@ -17,10 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const attendeesInput = document.getElementById('attendees');
     const saveAndStartBtn = document.getElementById('saveAndStartBtn');
     const cancelBtn = document.getElementById('cancelBtn');
+    const archiveDetailModal = document.getElementById('archiveDetailModal');
+    const archiveDetailContent = document.getElementById('archiveDetailContent');
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+
+
 
     // Navigation
     const navButtons = document.querySelectorAll('.nav-btn');
     const tabContents = document.querySelectorAll('.tab-content');
+
+    // Chart Elements
+    const trendsCanvas = document.getElementById('trendsChart');
+    let trendsChart = null;
 
     // --- App State ---
     let state = {
@@ -150,12 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const transaction = db.transaction([storeName], 'readonly');
         const objectStore = transaction.objectStore(storeName);
         const index = objectStore.index('timestampEnded');
-        const request = index.getAll(null, 'prev'); // Sort by most recent
+        const meetings = [];
+        // Use a cursor to get all objects in descending order
+        const request = index.openCursor(null, 'prev');
 
-        request.onsuccess = () => {
-            const meetings = request.result;
-            archiveList.innerHTML = '';
-            if (meetings.length === 0) {
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                meetings.push(cursor.value);
+                cursor.continue();
+            } else {
+                // All items collected
+                archiveList.innerHTML = '';
+                if (meetings.length === 0) {
                 archiveList.innerHTML = '<p>No meetings in archive.</p>';
                 return;
             }
@@ -163,21 +179,134 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = 'archive-item';
                 item.innerHTML = `
-                    <div class="archive-item-header">${meeting.name}</div>
+                    <div class="archive-item-header">${meeting.name} - ${new Date(meeting.date).toLocaleDateString()}</div>
                     <div class="archive-item-details">
                         <span>${new Date(meeting.date).toLocaleString()}</span>
                         <span>Duration: ${formatTime(meeting.duration)}</span>
                         <span>Cost: ${formatCurrency(meeting.totalCost)}</span>
                     </div>
                 `;
+                // Add click event to show details
+                item.addEventListener('click', () => {
+                    showArchiveDetail(meeting.id);
+                });
+
                 archiveList.appendChild(item);
             });
+            }
         };
         request.onerror = (e) => {
             archiveList.innerHTML = '<p>Error loading archive.</p>';
             console.error('Error loading archive:', e.target.error);
         };
     }
+
+    function showArchiveDetail(meetingId) {
+        const transaction = db.transaction([storeName], 'readonly');
+        const objectStore = transaction.objectStore(storeName);
+        const request = objectStore.get(meetingId);
+
+        request.onsuccess = (event) => {
+            const meeting = event.target.result;
+            if (!meeting) {
+                console.error('Meeting not found');
+                return;
+            }
+
+            const attendeesList = meeting.attendees.map(name => `<li>${name}</li>`).join('');
+
+            archiveDetailContent.innerHTML = `
+                <p><strong>Meeting:</strong> ${meeting.name}</p>
+                <p><strong>Date:</strong> ${new Date(meeting.date).toLocaleString()}</p>
+                <p><strong>Duration:</strong> ${formatTime(meeting.duration)}</p>
+                <p><strong>Total Cost:</strong> ${formatCurrency(meeting.totalCost)}</p>
+                <p><strong>Avg. Hourly Rate:</strong> ${formatCurrency(meeting.avgHourlyRate)}</p>
+                <p><strong>Attendees (${meeting.attendees.length}):</strong></p>
+                <ul>${attendeesList}</ul>
+            `;
+
+            archiveDetailModal.style.display = 'flex';
+        };
+
+        request.onerror = (e) => {
+            console.error('Error fetching meeting details:', e.target.error);
+            alert('Could not load meeting details.');
+        };
+    }
+
+    function renderTrendsChart() {
+        // Get CSS variable colors for the chart
+        const computedStyles = getComputedStyle(document.documentElement);
+        const pipboyGreen = computedStyles.getPropertyValue('--pipboy-green').trim();
+        const glowColor = computedStyles.getPropertyValue('--glow-color').trim();
+
+        const transaction = db.transaction([storeName], 'readonly');
+        const objectStore = transaction.objectStore(storeName);
+        const index = objectStore.index('timestampEnded');
+        const meetings = [];
+
+        // Use cursor to get all meetings, sorted by date
+        index.openCursor(null, 'next').onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                meetings.push(cursor.value);
+                cursor.continue();
+            } else {
+                // All data fetched, now create chart
+                if (trendsChart) {
+                    trendsChart.destroy(); // Clear previous chart instance
+                }
+
+                const labels = meetings.map(m => new Date(m.date).toLocaleDateString());
+                const data = meetings.map(m => m.totalCost);
+
+                trendsChart = new Chart(trendsCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cost Per Meeting',
+                            data: data,
+                            borderColor: pipboyGreen,
+                            backgroundColor: glowColor,
+                            tension: 0.1,
+                            pointBackgroundColor: pipboyGreen,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: pipboyGreen }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += formatCurrency(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { ticks: { color: pipboyGreen }, grid: { color: 'rgba(0, 255, 102, 0.1)' } },
+                            y: { ticks: { color: pipboyGreen, callback: value => formatCurrency(value) }, grid: { color: 'rgba(0, 255, 102, 0.1)' } }
+                        }
+                    }
+                });
+            }
+        };
+    }
+
 
     function clearArchive() {
         if (!confirm('Are you sure you want to clear the entire meeting archive? This cannot be undone.')) {
@@ -210,6 +339,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (tab === 'archive') {
                 loadArchive();
+            }
+            if (tab === 'trends') {
+                renderTrendsChart();
             }
         });
     });
@@ -269,11 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('WasteWatch-avgHourlyRate', avgHourlyRateInput.value);
         localStorage.setItem('WasteWatch-attendees', attendeesInput.value);
 
+        // Reset displays before starting
+        resetUI(); 
+
         // Update UI and start timer
         meetingNameDisplay.textContent = state.currentMeeting.name;
         startPauseBtn.disabled = false;
         endBtn.disabled = false;
-        resetUI(); // Reset displays before starting
         timeDisplay.textContent = formatTime(0);
         costDisplay.textContent = formatCurrency(0);
 
@@ -283,10 +417,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close modal if clicking outside of it
     window.addEventListener('click', (event) => {
-        if (event.target === configModal) {
+        if (event.target === configModal ) {
             configModal.style.display = 'none';
         }
+        if (event.target === archiveDetailModal) {
+            archiveDetailModal.style.display = 'none';
+        }
     });
+
+    // Close detail modal with button
+    closeDetailBtn.addEventListener('click', () => archiveDetailModal.style.display = 'none');
 
     // --- Initialization ---
     initDB();

@@ -256,6 +256,31 @@ nav {
     opacity: 0.8;
 }
 
+/* Archive Detail Modal Content */
+#archiveDetailContent p {
+    margin: 5px 0 15px 0;
+    line-height: 1.4;
+}
+#archiveDetailContent strong {
+    color: var(--pipboy-green);
+    text-shadow: 0 0 3px var(--glow-color);
+}
+#archiveDetailContent ul {
+    list-style-type: none;
+    padding-left: 10px;
+    margin: 5px 0 15px 0;
+    border-left: 1px solid var(--pipboy-green);
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+/* Trends/Chart View */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
 /* Footer */
 footer {
     border-top: 2px solid var(--pipboy-green);
