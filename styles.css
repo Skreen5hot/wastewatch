@@ -315,3 +315,12 @@ footer {
     text-align: center;
     font-size: 0.9em;
 }
+
+/* --- Media Queries for Responsiveness --- */
+
+/* Hide Miniplayer button on tablet and mobile devices */
+@media (max-width: 768px) {
+    #miniplayerBtn {
+        display: none;
+    }
+}
