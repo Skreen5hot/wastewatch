@@ -17,6 +17,8 @@ const URLS_TO_CACHE = [
     './icons/icon-192x192.png',
     './icons/icon-384x384.png',
     './icons/icon-512x512.png',
+    './images/screenshot-desktop.png',
+    './images/screenshot-mobile.png',
     'https://fonts.googleapis.com/css2?family=VT323&display=swap',
     'https://cdn.jsdelivr.net/npm/chart.js'
 ];

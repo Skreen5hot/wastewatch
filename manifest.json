@@ -1,8 +1,11 @@
 {
     "name": "WasteWatch",
     "short_name": "WasteWatch",
+    "version": "1.0.0",
     "description": "A Pip-Boy themed app to track the real-time cost of meetings.",
-    "start_url": ".",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#001a00",
     "theme_color": "#00ff66",
@@ -49,5 +52,22 @@
             "type": "image/png",
             "purpose": "any maskable"
         }
-    ]
+    ],
+    "screenshots": [
+        {
+            "src": "images/screenshot-desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "WasteWatch on a desktop terminal"
+        },
+        {
+            "src": "images/screenshot-mobile.png",
+            "sizes": "540x720",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "WasteWatch on a mobile device"
+        }
+    ],
+    "display_override": ["standalone", "fullscreen"]
 }
