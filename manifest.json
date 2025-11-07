@@ -4,8 +4,8 @@
     "version": "1.0.0",
     "description": "A Pip-Boy themed app to track the real-time cost of meetings.",
     "id": "/",
-    "start_url": "/",
-    "scope": "/",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
     "background_color": "#001a00",
     "theme_color": "#00ff66",
@@ -13,16 +13,6 @@
         {
             "src": "icons/icon-72x72.png",
             "sizes": "72x72",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/icon-96x96.png",
-            "sizes": "96x96",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/icon-128x128.png",
-            "sizes": "128x128",
             "type": "image/png"
         },
         {
