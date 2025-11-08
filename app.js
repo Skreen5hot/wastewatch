@@ -14,10 +14,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const configModal = document.getElementById('configModal');
     const configForm = document.getElementById('configForm');
     const meetingNameInput = document.getElementById('meetingName');
-    const avgHourlyRateInput = document.getElementById('avgHourlyRate');
-    const attendeesInput = document.getElementById('attendees');
     const saveAndStartBtn = document.getElementById('saveAndStartBtn');
     const cancelBtn = document.getElementById('cancelBtn');
+
+    // Input Mode Elements
+    const costInputModeRadios = document.querySelectorAll('input[name="inputMode"]');
+    const simpleModeInputs = document.getElementById('simpleModeInputs');
+    const detailedModeInputs = document.getElementById('detailedModeInputs');
+    const attendeeListModeInputs = document.getElementById('attendeeListModeInputs');
+    const avgHourlyRateSimpleInput = document.getElementById('avgHourlyRateSimple');
+    const totalAttendeesInput = document.getElementById('totalAttendees');
+    const roleInputsContainer = document.getElementById('roleInputsContainer');
+    const addRoleBtn = document.getElementById('addRoleBtn');
+    const avgHourlyRateListInput = document.getElementById('avgHourlyRateList');
+    const attendeesInput = document.getElementById('attendees');
+
     const archiveDetailModal = document.getElementById('archiveDetailModal');
     const archiveDetailContent = document.getElementById('archiveDetailContent');
     const closeDetailBtn = document.getElementById('closeDetailBtn');
@@ -50,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isRunning: false,
         currentMeeting: null, // { name, avgHourlyRate, attendees, attendeesCount }
     };
+    let lastInputMode = 'list';
 
     // --- IndexedDB ---
     let db;
@@ -382,6 +394,21 @@ document.addEventListener('DOMContentLoaded', () => {
     endBtn.addEventListener('click', endMeeting);
     clearArchiveBtn.addEventListener('click', clearArchive);
     miniplayerBtn.addEventListener('click', toggleMiniplayer);
+    addRoleBtn.addEventListener('click', addRoleGroup);
+    roleInputsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-remove-role')) {
+            e.target.closest('.role-group').remove();
+        }
+    });
+    // Add event listener for auto-filling role rates
+    roleInputsContainer.addEventListener('input', (e) => {
+        const target = e.target;
+        if (target && target.matches('input[id^="roleName"]')) {
+            handleRoleInput(target);
+        } else if (target && target.matches('input[id^="roleRate"]')) { // Save on rate change too
+            saveRoleRate(e.target);
+        }
+    });
 
     // Modal
     configureBtn.addEventListener('click', () => {
@@ -389,10 +416,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
         const defaultName = `${now.toLocaleDateString()} - Staff Sync`;
         meetingNameInput.value = localStorage.getItem('WasteWatch-meetingName') || defaultName;
-        avgHourlyRateInput.value = localStorage.getItem('WasteWatch-avgHourlyRate') || '50.00';
+        avgHourlyRateListInput.value = localStorage.getItem('WasteWatch-avgHourlyRateList') || '50.00';
         attendeesInput.value = localStorage.getItem('WasteWatch-attendees') || '';
+        avgHourlyRateSimpleInput.value = localStorage.getItem('WasteWatch-avgHourlyRateSimple') || '50.00';
+        totalAttendeesInput.value = localStorage.getItem('WasteWatch-totalAttendees') || '5';
+
+        // Restore last used mode
+        lastInputMode = localStorage.getItem('WasteWatch-lastInputMode') || 'list';
+        document.querySelector(`input[name="inputMode"][value="${lastInputMode}"]`).checked = true;
+        handleModeChange();
 
         configModal.style.display = 'flex';
+        if (lastInputMode === 'detailed' && roleInputsContainer.children.length === 0) addRoleGroup();
     });
 
     cancelBtn.addEventListener('click', () => {
@@ -402,12 +437,52 @@ document.addEventListener('DOMContentLoaded', () => {
     configForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const attendeesList = attendeesInput.value.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+        let attendeesList = [];
+        let attendeesCount = 0;
+        let avgHourlyRate = 0;
 
-        if (attendeesList.length === 0) {
-            alert('Please add at least one attendee.');
+        const selectedMode = document.querySelector('input[name="inputMode"]:checked').value;
+
+        // --- Calculate cost based on active mode ---
+        if (selectedMode === 'list') {
+            attendeesList = attendeesInput.value.split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+            attendeesCount = attendeesList.length;
+            avgHourlyRate = parseFloat(avgHourlyRateListInput.value);
+            localStorage.setItem('WasteWatch-avgHourlyRateList', avgHourlyRateListInput.value);
+            localStorage.setItem('WasteWatch-attendees', attendeesInput.value);
+        } else if (selectedMode === 'simple') {
+            attendeesCount = parseInt(totalAttendeesInput.value, 10);
+            avgHourlyRate = parseFloat(avgHourlyRateSimpleInput.value);
+            for (let i = 1; i <= attendeesCount; i++) {
+                attendeesList.push(`Attendee ${i}`);
+            }
+            localStorage.setItem('WasteWatch-avgHourlyRateSimple', avgHourlyRateSimpleInput.value);
+            localStorage.setItem('WasteWatch-totalAttendees', totalAttendeesInput.value);
+        } else if (selectedMode === 'detailed') {
+            const roleGroups = roleInputsContainer.querySelectorAll('.role-group');
+            let totalCostPerHour = 0;
+            roleGroups.forEach(group => {
+                const count = parseInt(group.querySelector('input[id^="roleCount"]').value, 10);
+                const rate = parseFloat(group.querySelector('input[id^="roleRate"]').value);
+                const name = group.querySelector('input[id^="roleName"]').value || 'Unnamed Role';
+                
+                attendeesCount += count;
+                totalCostPerHour += count * rate;
+
+                for (let i = 1; i <= count; i++) {
+                    attendeesList.push(`${name} ${i}`);
+                }
+            });
+            avgHourlyRate = attendeesCount > 0 ? totalCostPerHour / attendeesCount : 0;
+        }
+
+        if (attendeesCount === 0) {
+            alert('Please configure at least one attendee.');
             return;
         }
+
+        // Save last used mode
+        localStorage.setItem('WasteWatch-lastInputMode', selectedMode);
 
         // Reset previous meeting state if any
         if (state.isRunning) pauseTimer();
@@ -416,15 +491,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set new meeting config
         state.currentMeeting = {
             name: meetingNameInput.value,
-            avgHourlyRate: parseFloat(avgHourlyRateInput.value),
+            avgHourlyRate: avgHourlyRate,
             attendees: attendeesList,
-            attendeesCount: attendeesList.length,
+            attendeesCount: attendeesCount,
         };
 
         // Save defaults for next time
         localStorage.setItem('WasteWatch-meetingName', meetingNameInput.value);
-        localStorage.setItem('WasteWatch-avgHourlyRate', avgHourlyRateInput.value);
-        localStorage.setItem('WasteWatch-attendees', attendeesInput.value);
 
         // Reset displays before starting
         resetUI(); 
@@ -440,6 +513,148 @@ document.addEventListener('DOMContentLoaded', () => {
         configModal.style.display = 'none';
         startTimer();
     });
+
+    // --- Input Mode Logic ---
+    costInputModeRadios.forEach(radio => radio.addEventListener('change', handleModeChange));
+
+    function handleModeChange() {
+        const selectedMode = document.querySelector('input[name="inputMode"]:checked').value;
+
+        // Hide all containers
+        simpleModeInputs.style.display = 'none';
+        detailedModeInputs.style.display = 'none';
+        attendeeListModeInputs.style.display = 'none';
+
+        // Disable 'required' on all inputs first
+        [...simpleModeInputs.querySelectorAll('input')].forEach(el => el.required = false);
+        [...detailedModeInputs.querySelectorAll('input')].forEach(el => el.required = false);
+        [...attendeeListModeInputs.querySelectorAll('input, textarea')].forEach(el => el.required = false);
+
+        // Show the selected container and enable 'required'
+        if (selectedMode === 'simple') {
+            simpleModeInputs.style.display = 'block';
+            [...simpleModeInputs.querySelectorAll('input')].forEach(el => el.required = true);
+        } else if (selectedMode === 'detailed') {
+            detailedModeInputs.style.display = 'block';
+            [...detailedModeInputs.querySelectorAll('input')].forEach(el => el.required = true);
+            // Add a default role if none exist
+            if (roleInputsContainer.children.length === 0) {
+                addRoleGroup();
+            }
+        } else { // 'list'
+            attendeeListModeInputs.style.display = 'block';
+            [...attendeeListModeInputs.querySelectorAll('input, textarea')].forEach(el => el.required = true);
+        }
+    }
+
+    function addRoleGroup() {
+        const roleId = Date.now(); // Unique ID for the new group
+        const newRoleGroup = document.createElement('div');
+        newRoleGroup.className = 'role-group';
+        newRoleGroup.dataset.roleId = roleId;
+
+        newRoleGroup.innerHTML = `
+            <div class="form-group">
+                <label for="roleName_${roleId}">Role Name</label>
+                <div class="autocomplete-container">
+                    <input type="text" id="roleSuggestion_${roleId}" class="role-suggestion-input" disabled tabindex="-1">
+                    <input type="text" id="roleName_${roleId}" class="role-name-input" placeholder="e.g., Engineer" required autocomplete="off">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="roleRate_${roleId}">Rate ($/hr)</label>
+                <input type="number" id="roleRate_${roleId}" step="0.01" min="0" value="60" required>
+            </div>
+            <div class="form-group">
+                <label for="roleCount_${roleId}">Count</label>
+                <input type="number" id="roleCount_${roleId}" min="1" value="1" required>
+            </div>
+            <button type="button" class="btn-remove-role">X</button> 
+        `;
+
+        // Don't allow removing the last role group
+        if (roleInputsContainer.children.length === 0) {
+            newRoleGroup.querySelector('.btn-remove-role').style.display = 'none';
+        } else {
+            // Ensure the first one can't be removed if it's now the only one
+            if (roleInputsContainer.children.length === 1) {
+                 roleInputsContainer.querySelector('.btn-remove-role').style.display = 'block';
+            }
+        }
+        roleInputsContainer.appendChild(newRoleGroup);
+    }
+    
+    function handleRoleInput(userInput) {
+        const roleGroup = userInput.closest('.role-group');
+        if (!roleGroup) return;
+    
+        const suggestionInput = roleGroup.querySelector('.role-suggestion-input');
+        const currentText = userInput.value;
+        const savedRates = JSON.parse(localStorage.getItem('WasteWatch-roleRates')) || {};
+        
+        if (!currentText) {
+            suggestionInput.value = '';
+            return;
+        }
+    
+        const match = Object.keys(savedRates).find(role => role.toLowerCase().startsWith(currentText.toLowerCase()));
+    
+        if (match && match.toLowerCase() !== currentText.toLowerCase()) {
+            suggestionInput.value = currentText + match.substring(currentText.length);
+            console.log('Suggestion generated:', suggestionInput.value);
+        } else {
+            suggestionInput.value = '';
+            console.log('No suggestion found.');
+        }
+    }
+    
+    // Handle Tab/Enter to accept suggestion
+    roleInputsContainer.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab' && e.key !== 'Enter') return;
+    
+        const userInput = e.target;
+        if (!userInput.matches('input[id^="roleName"]')) return;
+    
+        const roleGroup = userInput.closest('.role-group');
+        if (!roleGroup) return;
+    
+        const suggestionInput = roleGroup.querySelector('.role-suggestion-input');
+        if (suggestionInput.value) {
+            e.preventDefault();
+            userInput.value = suggestionInput.value;
+            suggestionInput.value = '';
+            autofillRoleRate(userInput);
+            saveRoleRate(roleGroup.querySelector('input[id^="roleRate"]'));
+        }
+    });
+
+    function saveRoleRate(rateInput) {
+        const roleGroup = rateInput.closest('.role-group');
+        if (!roleGroup) return;
+
+        const roleNameInput = roleGroup.querySelector('input[id^="roleName"]');
+        const roleName = roleNameInput.value.trim();
+        const rate = parseFloat(rateInput.value);
+
+        if (roleName && !isNaN(rate)) {
+            const savedRates = JSON.parse(localStorage.getItem('WasteWatch-roleRates')) || {};
+            savedRates[roleName] = rate;
+            localStorage.setItem('WasteWatch-roleRates', JSON.stringify(savedRates));
+        }
+    }
+
+    function autofillRoleRate(roleNameInput) {
+        const roleGroup = roleNameInput.closest('.role-group');
+        if (!roleGroup) return;
+
+        const rateInput = roleGroup.querySelector('input[id^="roleRate"]');
+        const roleName = roleNameInput.value.trim();
+        const savedRates = JSON.parse(localStorage.getItem('WasteWatch-roleRates')) || {};
+
+        if (roleName && savedRates[roleName]) {
+            rateInput.value = savedRates[roleName];
+        }
+    }
 
     // --- Miniplayer (Picture-in-Picture) Logic ---
     async function toggleMiniplayer() {
@@ -502,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PWA Service Worker Registration ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js', { scope: './' })
+            navigator.serviceWorker.register('/sw.js')
                 .then((reg) => console.log('Service worker registered.', reg))
                 .catch((err) => console.log('Service worker not registered.', err));
         });

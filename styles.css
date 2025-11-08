@@ -229,6 +229,92 @@ nav {
     margin-top: 20px;
 }
 
+/* Input Mode Selector */
+#costInputMode {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#costInputMode label {
+    cursor: pointer;
+    margin-right: 5px;
+}
+#costInputMode input[type="radio"] {
+    display: none; /* Hide the actual radio button */
+}
+#costInputMode input[type="radio"] + label {
+    position: relative;
+    padding-left: 25px;
+}
+#costInputMode input[type="radio"] + label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--pipboy-green);
+    border-radius: 50%;
+}
+#costInputMode input[type="radio"]:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background: var(--pipboy-green);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--glow-color);
+}
+
+/* Detailed Mode Styles */
+.role-group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    border: 1px dashed #004d1a;
+    padding: 10px;
+    margin-bottom: 10px;
+    position: relative;
+}
+.role-group .form-group {
+    flex: 1;
+}
+
+/* Autocomplete container for role inputs */
+.autocomplete-container {
+    position: relative;
+    width: 100%;
+    background-color: var(--pipboy-black); /* Move background here */
+}
+.autocomplete-container input {
+    /* Ensure both inputs have identical box model and font for perfect alignment */
+    width: 100%;
+    border: 1px solid var(--pipboy-green);
+    color: var(--pipboy-green);
+    padding: 8px;
+    font-family: var(--pipboy-font);
+    font-size: 1.1em;
+    box-sizing: border-box;
+    background-color: transparent; /* Both inputs are transparent */
+}
+.role-suggestion-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1; /* Behind the user input */
+    color: #006629; /* Dim color for the suggestion */
+}
+
+.role-name-input {
+    position: relative;
+    z-index: 2; /* On top of the suggestion */
+}
+
 /* Archive View */
 #archive-list {
     max-height: 300px;
@@ -323,4 +409,28 @@ footer {
     #miniplayerBtn {
         display: none;
     }
+}
+
+.btn-remove-role {
+    background: #550000;
+    color: #ffaaaa;
+    border: 1px solid #ff5555;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-family: var(--pipboy-font);
+    margin-bottom: 15px;
+}
+.btn-remove-role:hover {
+    background: #880000;
+}
+
+.btn-small {
+    background: transparent;
+    border: 1px solid var(--pipboy-green);
+    color: var(--pipboy-green);
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: var(--pipboy-font);
+    margin-top: 5px;
 }
