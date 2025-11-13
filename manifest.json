@@ -3,7 +3,7 @@
     "short_name": "WasteWatch",
     "version": "1.0.0",
     "description": "A Pip-Boy themed app to track the real-time cost of meetings.",
-    "id": "/",
+    "id": "./",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
