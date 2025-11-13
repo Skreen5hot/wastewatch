@@ -1,19 +1,19 @@
-const CACHE_NAME = 'wastewatch-v1.1';
+const CACHE_NAME = 'wastewatch-v1.2'; // Incremented version
 const URLS_TO_CACHE = [
-    './',
+    'index.html', // Changed from './' to be more explicit
     'index.html',
     'styles.css',
     'app.js',
     'manifest.json',
     'favicon.svg',
-    './icons/icon-72x72.png',
-    './icons/icon-144x144.png',
-    './icons/icon-152x152.png',
-    './icons/icon-192x192.png',
-    './icons/icon-384x384.png',
-    './icons/icon-512x512.png',
-    './images/screenshot-desktop.png',
-    './images/screenshot-mobile.png',
+    'icons/icon-72x72.png',
+    'icons/icon-144x144.png',
+    'icons/icon-152x152.png',
+    'icons/icon-192x192.png',
+    'icons/icon-384x384.png',
+    'icons/icon-512x512.png',
+    'images/screenshot-desktop.png',
+    'images/screenshot-mobile.png',
     'libs/chart.min.js',
     'https://fonts.googleapis.com/css2?family=VT323&display=swap'
 ];
