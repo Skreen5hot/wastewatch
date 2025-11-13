@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wastewatch-v1';
+const CACHE_NAME = 'wastewatch-v1.1';
 const URLS_TO_CACHE = [
     './',
     'index.html',
@@ -29,17 +29,35 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Serve cached content when offline
+// Serve content using a Stale-While-Revalidate strategy
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Cache hit - return response
-                if (response) {
+    // For requests to other origins (like Google Fonts), use a network-first strategy.
+    if (!event.request.url.startsWith(self.location.origin)) {
+        event.respondWith(
+            caches.open(CACHE_NAME).then(async (cache) => {
+                try {
+                    const response = await fetch(event.request);
+                    await cache.put(event.request, response.clone());
                     return response;
+                } catch (error) {
+                    // If network fails, try to serve from cache.
+                    return await cache.match(event.request);
                 }
-                return fetch(event.request);
             })
+        );
+        return;
+    }
+
+    // For same-origin requests, use Stale-While-Revalidate.
+    event.respondWith(
+        caches.open(CACHE_NAME).then(async (cache) => {
+            const cachedResponse = await cache.match(event.request);
+            const fetchedResponse = fetch(event.request).then((networkResponse) => {
+                cache.put(event.request, networkResponse.clone());
+                return networkResponse;
+            });
+            return cachedResponse || fetchedResponse;
+        })
     );
 });
 
@@ -50,7 +68,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                    if (!cacheWhitelist.includes(cacheName)) {
                         return caches.delete(cacheName);
                     }
                 })
