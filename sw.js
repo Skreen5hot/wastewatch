@@ -1,6 +1,5 @@
-const CACHE_NAME = 'wastewatch-v1.2'; // Incremented version
+const CACHE_NAME = 'wastewatch-v1.3'; // Incremented version
 const URLS_TO_CACHE = [
-    'index.html', // Changed from './' to be more explicit
     'index.html',
     'styles.css',
     'app.js',
